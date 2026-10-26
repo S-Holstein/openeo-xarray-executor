@@ -35,7 +35,6 @@ jobs:
             # Für alle anderen Pushes wird der Branch-Name als Tag genutzt (z.B. :feature-login)
             type=ref,event=branch
 
-      # Das Docker-Image wird nun mit dem dynamischen Branch-Tag gebaut und gepusht
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
