@@ -2,9 +2,6 @@ name: Build and Push Branch Images
 
 on:
   push:
-    # "*" sorgt dafür, dass der Workflow bei Pushes auf JEDEN Branch startet
-    branches:
-      - '*'
 
 permissions:
   contents: read
