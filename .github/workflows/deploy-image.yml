@@ -32,11 +32,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            # Nur bei Git-Tag v1.2.3 -> 1.2.3 (und automatisch latest)
             type=semver,pattern={{version}}
-            # Branches: z.B. feature-login und feature-login-15
             type=ref,event=branch
-            type=ref,event=branch,suffix=-${{ github.run_number }}
+            type=sha,prefix={{branch}}-
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
