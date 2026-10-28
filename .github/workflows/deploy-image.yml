@@ -1,7 +1,12 @@
-name: Build and Push Branch Images
+name: Build and Push Container Images
 
 on:
   push:
+    branches:
+      - '**'
+      - '!main'
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -21,16 +26,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            # Wenn Push auf 'main', wird das Image 'latest' getaggt
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            # Für alle anderen Pushes wird der Branch-Name als Tag genutzt (z.B. :feature-login)
+            # Nur bei Git-Tag v1.2.3 -> 1.2.3 (und automatisch latest)
+            type=semver,pattern={{version}}
+            # Branches: z.B. feature-login und feature-login-15
             type=ref,event=branch
+            type=ref,event=branch,suffix=-${{ github.run_number }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -39,3 +45,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          sbom: false
