@@ -17,3 +17,5 @@ To create a charliecloud image .sqfs from the Dockerfile for the use on tb:
 - convert the Dockerimage to a .sqfs: `ch-convert openeo-executor.tar openeo-executor.sqfs`
 - or follow: https://docs.terrabyte.lrz.de/software/containers/charliecloud/#generate-a-charliecloud-image-from-a-dockerfile
 
+
+
