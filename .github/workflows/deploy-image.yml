@@ -2,10 +2,9 @@ name: Build and Push Container Images
 
 on:
   push:
-    # Reagiert auf alle Branches
     branches:
-      - '*'
-    # WICHTIG: Reagiert jetzt zusätzlich, wenn ein Git-Tag gepusht wird (z. B. v1.0.0)
+      - '**'
+      - '!main'
     tags:
       - 'v*'
 
@@ -27,25 +26,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            # === LOGIK FÜR MAIN / RELEASES ===
-            # Wenn ein echtes Git-Tag gepusht wird, nutze SemVer (z.B. :1.2.3 und :1.2)
+            # Nur bei Git-Tag v1.2.3 -> 1.2.3 (und automatisch latest)
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            # Wenn Code direkt auf 'main' landet, halte das ':latest' Tag aktuell
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
-            # === LOGIK FÜR BRANCHES ===
-            # Für normale Feature-Branches: Erstelle ein Tag aus Branchname + Build-Nummer (z.B. :feature-login-15)
-            # Das 'enable' sorgt dafür, dass dieser Müll-Schutz NICHT auf dem main-Branch greift
-            type=ref,event=branch,suffix=-${{ github.run_number }},enable=${{ github.ref != 'refs/heads/main' }}
-            # Zusätzlich das "aktuelle" Branch-Tag ohne Nummer für den schnellen Zugriff behalten
-            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
+            # Branches: z.B. feature-login und feature-login-15
+            type=ref,event=branch
+            type=ref,event=branch,suffix=-${{ github.run_number }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -54,3 +45,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          sbom: false
