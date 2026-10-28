@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+      - '!main'
     tags:
       - 'v*'
 
@@ -11,19 +12,12 @@ permissions:
   contents: read
   packages: write
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -38,16 +32,11 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            # Releases (Git-Tag v1.2.3)
+            # Nur bei Git-Tag v1.2.3 -> 1.2.3 (und automatisch latest)
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            # latest: main und Releases
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
-            # Unveränderliches Tag pro Commit
-            type=sha
-            # Feature-Branches
-            type=ref,event=branch,suffix=-${{ github.run_number }},enable=${{ github.ref != 'refs/heads/main' }}
-            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
+            # Branches: z.B. feature-login und feature-login-15
+            type=ref,event=branch
+            type=ref,event=branch,suffix=-${{ github.run_number }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -56,5 +45,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          provenance: false
+          sbom: false
